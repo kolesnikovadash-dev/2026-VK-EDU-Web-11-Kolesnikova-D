@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="static/css/bootstrap.min.css">
+    <link rel="icon" href="static/img/favicon.ico">
+    <title>Question - AskMe</title>
+</head>
+<body>
+
+<header class="container border-bottom pb-2 mb-3">
+    <div class="row align-items-center">
+        <!-- logo -->
+        <div class="col-12 col-md-3 mb-2 mb-md-0">
+            <h1 class="h3 mb-0">
+                <a href="index.html">AskMe</a>
+            </h1>
+        </div>
+
+        <!-- search -->
+        <div class="col-12 col-md-4 mb-2 mb-md-0">
+            <div class="d-flex">
+                <input class="form-control" type="text" placeholder="Search">
+                <a href="ask.html" class="btn btn-success ms-2">ASK!</a>
+            </div>
+        </div>
+
+        <!-- user -->
+        <div class="col-12 col-md-5">
+            <div class="d-flex align-items-center justify-content-md-end">
+                <img src="static/img/avatar.png" alt="avatar" width="50" height="50">
+                <div class="ms-2">
+                    <div>имя пользователя</div>
+                    <div>
+                        <a href="settings.html">settings</a>
+                        <a href="#" class="ms-2">log out</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<main class="container mt-3">
+    <div class="row">
+
+        <!-- left -->
+        <section class="col-12 col-md-8">
+
+            <!-- question -->
+            <div class="row border p-3 mb-4">
+                <div class="col-3 text-center">
+                    <img src="static/img/avatar.png" alt="avatar" width="80" height="80">
+
+                    <div class="d-flex justify-content-center align-items-center mt-2">
+                        <span>5</span>
+                        <div class="d-flex flex-column ms-2">
+                            <button class="btn btn-outline-secondary btn-sm mb-1">▲</button>
+                            <button class="btn btn-outline-secondary btn-sm">▼</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-9">
+                    <h3>How to build a moon park?</h3>
+
+                    <p>
+                        I want to create an amusement park on the Moon. What technologies,
+                        materials, and energy sources would be required to make it possible?
+                    </p>
+
+                    <p class="text-muted small">asked 2 hours ago</p>
+
+                    <div class="small">
+                        <span>Tags:</span>
+                        <a href="#" class="ms-1">space</a>
+                        <a href="#" class="ms-1">engineering</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- answer 1 -->
+            <div class="row border p-3 mb-3">
+                <div class="col-2 text-center">
+                    <img src="static/img/avatar.png" alt="avatar" width="60" height="60">
+
+                    <div class="d-flex justify-content-center align-items-center mt-2">
+                        <span>5</span>
+                        <div class="d-flex flex-column ms-2">
+                            <button class="btn btn-outline-secondary btn-sm mb-1">▲</button>
+                            <button class="btn btn-outline-secondary btn-sm">▼</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-10">
+                    <p>
+                        First of all, you need stable energy, life support systems,
+                        and safe transportation. Without solving these problems,
+                        building an entertainment park on the Moon would be impossible.
+                    </p>
+
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" checked id="correct1">
+                        <label class="form-check-label" for="correct1">
+                            Correct!
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- answer 2 -->
+            <div class="row border p-3 mb-4">
+                <div class="col-2 text-center">
+                    <img src="static/img/avatar.png" alt="avatar" width="60" height="60">
+
+                    <div class="d-flex justify-content-center align-items-center mt-2">
+                        <span>3</span>
+                        <div class="d-flex flex-column ms-2">
+                            <button class="btn btn-outline-secondary btn-sm mb-1">▲</button>
+                            <button class="btn btn-outline-secondary btn-sm">▼</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-10">
+                    <p>
+                        You should also think about construction materials, radiation
+                        protection, and gravity compensation. The project is not only
+                        about attractions, but also about survival conditions.
+                    </p>
+
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="correct2">
+                        <label class="form-check-label" for="correct2">
+                            Correct!
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- answers pagination -->
+            <nav>
+                <ul class="pagination justify-content-center">
+                    <li class="page-item"><a class="page-link" href="#">1</a></li>
+                    <li class="page-item active"><a class="page-link" href="#">2</a></li>
+                    <li class="page-item"><a class="page-link" href="#">3</a></li>
+                </ul>
+            </nav>
+
+            <!-- answer form -->
+            <div class="mt-4">
+                <textarea
+                        class="form-control mb-3"
+                        rows="6"
+                        placeholder="Enter your answer here.."
+                ></textarea>
+
+                <button type="submit" class="btn btn-success">
+                    Answer
+                </button>
+            </div>
+
+        </section>
+
+        <!-- right -->
+        <aside class="col-12 col-md-4">
+
+            <h5>Popular Tags</h5>
+            <div class="mb-3">
+                <a href="#">perl</a>
+                <a href="#" class="ms-1">python</a>
+                <a href="#" class="ms-1">TechnoPark</a>
+                <a href="#" class="ms-1">MySQL</a>
+                <a href="#" class="ms-1">django</a>
+                <a href="#" class="ms-1">Mail.ru</a>
+            </div>
+
+            <h5>Best Members</h5>
+            <div>
+                <a href="#">Mr. Freeman</a><br>
+                <a href="#">Dr. House</a><br>
+                <a href="#">Bender</a><br>
+                <a href="#">Queen Victoria</a><br>
+                <a href="#">V. Pupkin</a>
+            </div>
+
+        </aside>
+
+    </div>
+</main>
+
+<footer class="container mt-4 mb-3 text-center text-muted small border-top pt-2">
+    AskMe © 2026
+</footer>
+
+<script src="static/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>
