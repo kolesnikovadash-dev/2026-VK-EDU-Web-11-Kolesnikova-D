@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block title %}Профиль{% endblock %}
+
+{% block content %}
+    <h1>Профиль</h1>
+
+    <form>
+      <p>
+        <label>Логин</label>
+        <input type="text" name="username" value="student">
+      </p>
+
+      <p>
+        <label>Email</label>
+        <input type="email" name="email" value="student@example.com">
+      </p>
+
+      <button type="submit">Сохранить</button>
+    </form>
+{% endblock %}

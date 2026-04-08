@@ -1,0 +1,25 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Q&A{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="{% url 'index' %}">Новые</a> |
+            <a href="{% url 'hot' %}">Hot</a> |
+            <a href="{% url 'login' %}">Login</a> |
+            <a href="{% url 'signup' %}">Signup</a> |
+            <a href="{% url 'ask' %}">Ask</a> |
+            <a href="{% url 'profile' %}">Profile</a>
+        </nav>
+    </header>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>

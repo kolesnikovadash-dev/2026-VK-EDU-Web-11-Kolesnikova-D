@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block title %}Тег: {{ tag }}{% endblock %}
+
+{% block content %}
+    <h1>Вопросы по тегу: {{tag }}</h1>
+
+    {%for q in questions %}
+        <div>
+            <h3>
+                <a href="{% url 'question' q.id %}">{{ q.title }}</a>
+            </h3>
+            <p>{{ q.text }}</p>
+        </div>
+    {% endfor %}
+
+    {% include 'includes/paginator.html' %}
+
+{% endblock %}
