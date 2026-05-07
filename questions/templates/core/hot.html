@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Лучшие вопросы{% endblock %}
+
+{% block content %}
+    <h1>Лучшие вопросы</h1>
+
+    {% for question in questions %}
+        {% include 'includes/question_card.html' %}
+    {% endfor %}
+
+    {% include 'includes/paginator.html' %}
+{% endblock %}

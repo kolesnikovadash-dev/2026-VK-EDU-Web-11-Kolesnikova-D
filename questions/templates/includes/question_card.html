@@ -1,0 +1,32 @@
+{% load static %}
+
+<div class="row border p-3 mb-3">
+    <div class="col-3 text-center">
+        <img src="{% static 'img/avatar.png' %}" alt="avatar" width="60" height="60">
+
+        <div class="d-flex justify-content-center align-items-center mt-2">
+            <span>{{ question.rating }}</span>
+            <div class="d-flex flex-column ms-2">
+                <button class="btn btn-outline-secondary btn-sm mb-1">▲</button>
+                <button class="btn btn-outline-secondary btn-sm">▼</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-9">
+        <h5>
+            <a href="{% url 'question' question.id %}">{{ question.title }}</a>
+        </h5>
+        <p>{{ question.text }}</p>
+
+        <p class="text-muted small">asked 2 hours ago</p>
+
+        <div class="small">
+            <a href="#">{{ question.answers_count }} answers</a>
+            <span class="ms-2">Tags:</span>
+            {% for tag in question.tags.all %}
+                <a href="{% url 'tag' tag.name %}">{{ tag.name }}</a>
+            {% endfor %}
+        </div>
+    </div>
+</div>

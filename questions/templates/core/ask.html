@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block title %}Задать вопрос{% endblock %}
+
+{% block content %}
+    <h1>Задать вопрос</h1>
+
+    <form>
+        <div class="mb-3">
+            <label class="form-label">Заголовок</label><br>
+            <input type="text" name="title" class="form-control">
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Текст вопроса</label>
+            <textarea name="text" rows="6" class="form-control"></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-success">Задать</button>
+    </form>
+{% endblock %}
