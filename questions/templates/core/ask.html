@@ -5,17 +5,49 @@
 {% block content %}
     <h1>Задать вопрос</h1>
 
-    <form>
+    <form method="post">
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
         <div class="mb-3">
-            <label class="form-label">Заголовок</label><br>
-            <input type="text" name="title" class="form-control">
+            <label class="form-label">{{ form.title.label }}</label>
+            {{ form.title }}
+            {% if form.title.errors %}
+                <div class="text-danger">
+                    {{ form.title.errors }}
+                </div>
+            {% endif %}
         </div>
 
         <div class="mb-3">
-            <label class="form-label">Текст вопроса</label>
-            <textarea name="text" rows="6" class="form-control"></textarea>
+            <label class="form-label">{{ form.text.label }}</label>
+            {{ form.text }}
+            {% if form.text.errors %}
+                <div class="text-danger">
+                    {{ form.text.errors }}
+                </div>
+            {% endif %}
         </div>
 
-        <button type="submit" class="btn btn-success">Задать</button>
+        <div class="mb-3">
+            <label class="form-label">{{ form.tags.label }}</label>
+            {{ form.tags }}
+            {% if form.tags.help_text %}
+                <div class="text-danger">
+                    {{ form.tags.help_text }}
+                </div>
+            {% endif %}
+            {% if form.tags.errors %}
+                <div class="text-danger">
+                    {{ form.tags.errors }}
+                </div>
+            {% endif %}
+        </div>
+
+        <button type="submit" class="btn btn-success">Задать вопрос</button>
     </form>
 {% endblock %}

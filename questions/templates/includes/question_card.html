@@ -19,7 +19,7 @@
         </h5>
         <p>{{ question.text }}</p>
 
-        <p class="text-muted small">asked 2 hours ago</p>
+        <p class="text-muted small">asked {{ question.created_at|timesince }} ago</p>
 
         <div class="small">
             <a href="{% url 'question' question.id %}">{{ question.answers_count }} answers</a>

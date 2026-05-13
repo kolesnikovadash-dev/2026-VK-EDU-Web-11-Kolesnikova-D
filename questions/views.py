@@ -1,6 +1,8 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, redirect, get_object_or_404
 from .models import Question, Answer, Tag
 from .utils import paginate
+from django.contrib.auth.decorators import login_required
+from .forms import AskForm, AnswerForm
 
 
 def index(request):
@@ -16,18 +18,63 @@ def hot(request):
 
 
 def question(request, question_id):
-    question = get_object_or_404(Question.objects.with_stats(), pk=question_id)
-    answers = Answer.objects.filter(question=question).select_related('author').order_by('-rating', '-created_at')
+    question = get_object_or_404(
+        Question.objects.with_stats(),
+        pk=question_id
+    )
+
+    if request.method == 'POST':
+        if not request.user.is_authenticated:
+            return redirect(f'/login/?continue={request.path}')
+
+        form = AnswerForm(request.POST)
+
+        if form.is_valid():
+            answer = form.save(
+                question=question,
+                author=request.user
+            )
+
+            answers = Answer.objects.filter(
+                question=question
+            ).select_related('author').order_by('-rating', '-created_at')
+
+            answer_ids = list(answers.values_list('id', flat=True))
+            answer_index = answer_ids.index(answer.id)
+            page_number = answer_index // 30 + 1
+
+            return redirect(
+                f'/question/{question.id}/?page={page_number}#answer-{answer.id}'
+            )
+    else:
+        form = AnswerForm()
+
+    answers = Answer.objects.filter(
+        question=question
+    ).select_related('author').order_by('-rating', '-created_at')
+
     page = paginate(answers, request, 30)
+
     return render(request, 'core/question.html', {
         'question': question,
         'answers': page.object_list,
         'page': page,
+        'form': form,
     })
 
 
+@login_required(login_url='/login/', redirect_field_name='continue')
 def ask(request):
-    return render(request, 'core/ask.html')
+    if request.method == 'POST':
+        form = AskForm(request.POST)
+        if form.is_valid():
+            question = form.save(author=request.user)
+            return redirect('question', question_id=question.id)
+    else:
+        form = AskForm()
+    return render(request, 'core/ask.html', {
+        'form': form
+    })
 
 
 def tag(request, tag_name):

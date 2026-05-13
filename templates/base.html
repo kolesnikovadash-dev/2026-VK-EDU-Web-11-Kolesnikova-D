@@ -22,21 +22,37 @@
             <div class="col-12 col-md-4 mb-2 mb-md-0">
                 <div class="d-flex">
                     <input class="form-control" type="text" placeholder="Search">
-                    <a href="{% url 'ask' %}" class="btn btn-success ms-2">Ask</a>
+                    {% if request.user.is_authenticated %}
+                        <a href="{% url 'ask' %}" class="btn btn-success ms-2">Ask</a>
+                    {% endif %}
                 </div>
             </div>
 
             <!-- user -->
             <div class="col-12 col-md-5">
                 <div class="d-flex align-items-center justify-content-md-end">
-                    <img src="{% static 'img/avatar.png' %}" alt="avatar" width="50" height="50">
-                    <div class="ms-2">
-                        <div>имя пользователя</div>
-                        <div>
-                            <a href="{% url 'profile' %}">settings</a>
-                            <a href="#" class="ms-2">log out</a>
+                    {% if request.user.is_authenticated %}
+                        {% if request.user.profile.avatar and request.user.profile.avatar.url %}
+                            <img src="{{ request.user.profile.avatar.url }}" alt="avatar" width="50" height="50">
+                        {% else %}
+                            <img src="{% static 'img/avatar.png' %}" alt="avatar" width="50" height="50">
+                        {% endif %}
+
+                        <div class="ms-2">
+                            <div>{{ request.user.username }}</div>
+                            <div>
+                                <a href="{% url 'profile_edit' %}">settings</a>
+                                <a href="{% url 'logout' %}?continue={{ request.path }}" class="ms-2">log out</a>
+                            </div>
                         </div>
-                    </div>
+                    {% else %}
+                        <div class="ms-2">
+                            <div>
+                                <a href="{% url 'login' %}?continue={{ request.path }}">log in</a>
+                                <a href="{% url 'signup' %}" class="ms-2">register</a>
+                            </div>
+                        </div>
+                    {% endif %}
                 </div>
             </div>
         </div>

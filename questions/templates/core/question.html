@@ -8,27 +8,61 @@
 
     <h2>Ответы:</h2>
 
-    {% for answer in answers %}
-        <div class="row border p-3 mb-3">
-            <div class="col-3 text-center">
-                <img src="{% static 'img/avatar.png' %}" alt="avatar" width="60" height="60">
+    {% if answers|length == 0 %}
+        <p class="text-muted">Пока нет ответов. Будьте первым, кто ответит на вопрос.</p>
+    {% else %}
+        <p>Страница {{ page.number }} из {{ page.paginator.num_pages }}</p>
 
-                <div class="d-flex justify-content-center align-items-center mt-2">
-                    <span>{{ answer.rating }}</span>
-                    <div class="d-flex flex-column ms-2">
-                        <button class="btn btn-outline-secondary btn-sm mb-1">▲</button>
-                        <button class="btn btn-outline-secondary btn-sm">▼</button>
+        {% for answer in answers %}
+            <div class="row border p-3 mb-3" id="answer-{{ answer.id }}">
+                <div class="col-3 text-center">
+                    <img src="{% static 'img/avatar.png' %}" alt="avatar" width="60" height="60">
+
+                    <div class="d-flex justify-content-center align-items-center mt-2">
+                        <span>{{ answer.rating }}</span>
+                        <div class="d-flex flex-column ms-2">
+                            <button class="btn btn-outline-secondary btn-sm mb-1">▲</button>
+                            <button class="btn btn-outline-secondary btn-sm">▼</button>
+                        </div>
                     </div>
                 </div>
+
+                <div class="col-9">
+                    <p>{{ answer.text }}</p>
+                    <p class="text-muted small">
+                        replied {{ answer.created_at|timesince }} ago by {{ answer.author.username }}
+                    </p>
+                </div>
+            </div>
+        {% endfor %}
+
+        {% include 'includes/paginator.html' %}
+    {% endif %}
+
+    <hr class="my-4">
+
+    {% if request.user.is_authenticated %}
+        <h3>Ваш ответ</h3>
+
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="mb-3">
+                {{ form.text }}
+
+                {% if form.text.errors %}
+                    <div class="text-danger">
+                        {{ form.text.errors }}
+                    </div>
+                {% endif %}
             </div>
 
-            <div class="col-9">
-                <p>{{ answer.text }}</p>
-
-                <p class="text-muted small">replied 2 hours ago</p>
-            </div>
-        </div>
-    {% endfor %}
-    {% include 'includes/paginator.html' %}
-
+            <button type="submit" class="btn btn-primary">Ответить</button>
+        </form>
+    {% else %}
+        <p>
+            Чтобы ответить, нужно
+            <a href="{% url 'login' %}?continue={{ request.path }}">войти</a>.
+        </p>
+    {% endif %}
 {% endblock %}
