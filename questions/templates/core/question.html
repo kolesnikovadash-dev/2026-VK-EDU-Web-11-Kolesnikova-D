@@ -16,19 +16,27 @@
         {% for answer in answers %}
             <div class="row border p-3 mb-3" id="answer-{{ answer.id }}">
                 <div class="col-3 text-center">
-                    <img src="{% static 'img/avatar.png' %}" alt="avatar" width="60" height="60">
-
-                    <div class="d-flex justify-content-center align-items-center mt-2">
-                        <span>{{ answer.rating }}</span>
-                        <div class="d-flex flex-column ms-2">
-                            <button class="btn btn-outline-secondary btn-sm mb-1">▲</button>
-                            <button class="btn btn-outline-secondary btn-sm">▼</button>
-                        </div>
-                    </div>
+                    {% include 'includes/avatar.html' with user_obj=answer.author %}
+                    {% include 'includes/vote_buttons.html' with obj=answer obj_type="answer" %}
                 </div>
 
                 <div class="col-9">
                     <p>{{ answer.text }}</p>
+                    {% if answer.is_correct %}
+                        <div class="text-success fw-bold mb-2">Correct answer</div>
+                    {% endif %}
+                    {% if request.user == question.author %}
+                        <button class="btn btn-sm btn-outline-success mark-correct-btn"
+                                data-question-id="{{ question.id }}"
+                                data-answer-id="{{ answer.id }}"
+                                {% if answer.is_correct %}disabled{% endif %}>
+                            {% if answer.is_correct %}
+                                Correct answer
+                            {% else %}
+                                Correct
+                            {% endif %}
+                        </button>
+                    {% endif %}
                     <p class="text-muted small">
                         replied {{ answer.created_at|timesince }} ago by {{ answer.author.username }}
                     </p>
@@ -47,15 +55,7 @@
         <form method="post">
             {% csrf_token %}
 
-            <div class="mb-3">
-                {{ form.text }}
-
-                {% if form.text.errors %}
-                    <div class="text-danger">
-                        {{ form.text.errors }}
-                    </div>
-                {% endif %}
-            </div>
+            {% include 'includes/form_field.html' with field=form.text %}
 
             <button type="submit" class="btn btn-primary">Ответить</button>
         </form>
@@ -65,4 +65,31 @@
             <a href="{% url 'login' %}?continue={{ request.path }}">войти</a>.
         </p>
     {% endif %}
+{% endblock %}
+{% block scripts %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('.mark-correct-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const answerId = this.dataset.answerId;
+                    const questionId = this.dataset.questionId;
+
+                    fetch('/mark-correct/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'X-CSRFToken': getCookie('csrftoken'),
+                        },
+                        body: `question_id=${questionId}&answer_id=${answerId}`
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.answer_id !== undefined) {
+                            location.reload();
+                        }
+                    });
+                });
+            });
+        });
+    </script>
 {% endblock %}

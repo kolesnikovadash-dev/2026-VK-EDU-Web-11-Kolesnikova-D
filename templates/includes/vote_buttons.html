@@ -1,0 +1,16 @@
+<div class="d-flex justify-content-center align-items-center mt-2">
+    <span id="{{ obj_type }}-rating-{{ obj.id }}">{{ obj.rating }}</span>
+
+    {% if request.user.is_authenticated %}
+        <div class="d-flex flex-column ms-2">
+            <button class="btn btn-outline-secondary btn-sm mb-1"
+                    data-id="{{ obj.id }}"
+                    data-type="{{ obj_type }}"
+                    data-value="1">▲</button>
+            <button class="btn btn-outline-secondary btn-sm"
+                    data-id="{{ obj.id }}"
+                    data-type="{{ obj_type }}"
+                    data-value="-1">▼</button>
+        </div>
+    {% endif %}
+</div>

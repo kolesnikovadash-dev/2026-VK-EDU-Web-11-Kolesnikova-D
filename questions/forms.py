@@ -30,6 +30,11 @@ class RegisterForm(forms.Form):
         label='Повторите пароль',
         widget=forms.PasswordInput(attrs={'class': 'form-control'})
     )
+    avatar = forms.ImageField(
+        label='Аватарка',
+        required=False,
+        widget=forms.FileInput(attrs={'class': 'form-control'})
+    )
     def clean_username(self):
         username = self.cleaned_data['username']
         if User.objects.filter(username=username).exists():

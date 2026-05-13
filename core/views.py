@@ -30,21 +30,19 @@ def login(request):
 
 def signup(request):
     if request.method == 'POST':
-        form = RegisterForm(request.POST)
+        form = RegisterForm(request.POST, request.FILES)
         if form.is_valid():
-            if form.cleaned_data['password'] != form.cleaned_data['password_repeat']:
-                form.add_error('password_repeat', 'Пароли не совпадают')
-            elif User.objects.filter(username=form.cleaned_data['username']).exists():
-                form.add_error('username', 'Такой пользователь уже существует')
-            else:
-                user = User.objects.create_user(
-                    username=form.cleaned_data['username'],
-                    email=form.cleaned_data['email'],
-                    password=form.cleaned_data['password']
-                )
-                Profile.objects.create(user=user)
-                auth_login(request, user)
-                return redirect('/')
+            user = User.objects.create_user(
+                username=form.cleaned_data['username'],
+                email=form.cleaned_data['email'],
+                password=form.cleaned_data['password']
+            )
+            profile = Profile.objects.create(user=user)
+            if form.cleaned_data.get('avatar'):
+                profile.avatar = form.cleaned_data['avatar']
+                profile.save()
+            auth_login(request, user)
+            return redirect('/')
     else:
         form = RegisterForm()
     return render(request, 'core/signup.html', {'form': form})

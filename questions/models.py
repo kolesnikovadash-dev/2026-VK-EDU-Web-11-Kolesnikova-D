@@ -21,7 +21,8 @@ class Tag(models.Model):
 class QuestionManager(models.Manager):
     def with_stats(self):
         return self.select_related(
-            'author'
+            'author',
+            'author__profile',
         ).prefetch_related(
             'tags'
         ).annotate(

@@ -13,40 +13,10 @@
                 {{ form.non_field_errors }}
             </div>
         {% endif %}
-        <div class="mb-3">
-            <label class="form-label">{{ form.title.label }}</label>
-            {{ form.title }}
-            {% if form.title.errors %}
-                <div class="text-danger">
-                    {{ form.title.errors }}
-                </div>
-            {% endif %}
-        </div>
 
-        <div class="mb-3">
-            <label class="form-label">{{ form.text.label }}</label>
-            {{ form.text }}
-            {% if form.text.errors %}
-                <div class="text-danger">
-                    {{ form.text.errors }}
-                </div>
-            {% endif %}
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label">{{ form.tags.label }}</label>
-            {{ form.tags }}
-            {% if form.tags.help_text %}
-                <div class="text-danger">
-                    {{ form.tags.help_text }}
-                </div>
-            {% endif %}
-            {% if form.tags.errors %}
-                <div class="text-danger">
-                    {{ form.tags.errors }}
-                </div>
-            {% endif %}
-        </div>
+        {% include 'includes/form_field.html' with field=form.title %}
+        {% include 'includes/form_field.html' with field=form.text %}
+        {% include 'includes/form_field.html' with field=form.tags %}
 
         <button type="submit" class="btn btn-success">Задать вопрос</button>
     </form>

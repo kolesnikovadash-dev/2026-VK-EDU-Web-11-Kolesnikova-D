@@ -1,0 +1,15 @@
+{# includes/form_field.html #}
+<div class="mb-3">
+  <label class="form-label">{{ field.label }}</label>
+  {{ field }}
+  {% if field.errors %}
+    <div class="text-danger">
+      {{ field.errors }}
+    </div>
+  {% endif %}
+  {% if field.help_text %}
+    <div class="form-text text-muted">
+      {{ field.help_text }}
+    </div>
+  {% endif %}
+</div>

@@ -88,5 +88,41 @@
             </aside>
         </div>
     </main>
+    <script>
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) {
+                return parts.pop().split(';').shift();
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('[data-type]').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = this.dataset.id;
+                    const type = this.dataset.type;
+                    const value = this.dataset.value;
+                    const url = type === 'question' ? '/vote/question/' : '/vote/answer/';
+
+                    fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'X-CSRFToken': getCookie('csrftoken'),
+                        },
+                        body: `id=${id}&value=${value}`
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.rating !== undefined) {
+                            document.getElementById(`${type}-rating-${id}`).textContent = data.rating;
+                        }
+                    });
+                });
+            });
+        });
+    </script>
+    {% block scripts %} {% endblock %}
 </body>
 </html>

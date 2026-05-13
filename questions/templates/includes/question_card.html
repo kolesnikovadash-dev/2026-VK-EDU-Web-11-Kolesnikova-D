@@ -2,15 +2,8 @@
 
 <div class="row border p-3 mb-3">
     <div class="col-3 text-center">
-        <img src="{% static 'img/avatar.png' %}" alt="avatar" width="60" height="60">
-
-        <div class="d-flex justify-content-center align-items-center mt-2">
-            <span>{{ question.rating }}</span>
-            <div class="d-flex flex-column ms-2">
-                <button class="btn btn-outline-secondary btn-sm mb-1">▲</button>
-                <button class="btn btn-outline-secondary btn-sm">▼</button>
-            </div>
-        </div>
+        {% include 'includes/avatar.html' with user_obj=question.author %}
+        {% include 'includes/vote_buttons.html' with obj=question obj_type="question" %}
     </div>
 
     <div class="col-9">
@@ -19,7 +12,7 @@
         </h5>
         <p>{{ question.text }}</p>
 
-        <p class="text-muted small">asked {{ question.created_at|timesince }} ago</p>
+        <p class="text-muted small">asked {{ question.created_at|timesince }} ago by {{ question.author.username }}</p>
 
         <div class="small">
             <a href="{% url 'question' question.id %}">{{ question.answers_count }} answers</a>
