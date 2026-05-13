@@ -5,7 +5,7 @@
 {% block content %}
     <h1>Вход</h1>
 
-    <form method="post" action="{% url 'login' %}?continue={{ continue_url">
+    <form method="post" action="{% url 'login' %}?continue={{ continue_url }}">
         {% csrf_token %}
 
         {% if form.non_field_errors %}
