@@ -1,0 +1,25 @@
+{% load static %}
+
+<div class="row border p-3 mb-3">
+    <div class="col-3 text-center">
+        {% include 'includes/avatar.html' with user_obj=question.author %}
+        {% include 'includes/vote_buttons.html' with obj=question obj_type="question" %}
+    </div>
+
+    <div class="col-9">
+        <h5>
+            <a href="{% url 'question' question.id %}">{{ question.title }}</a>
+        </h5>
+        <p>{{ question.text }}</p>
+
+        <p class="text-muted small">asked {{ question.created_at|timesince }} ago by {{ question.author.username }}</p>
+
+        <div class="small">
+            <a href="{% url 'question' question.id %}">{{ question.answers_count }} answers</a>
+            <span class="ms-2">Tags:</span>
+            {% for tag in question.tags.all %}
+                <a href="{% url 'tag' tag.name %}">{{ tag.name }}</a>
+            {% endfor %}
+        </div>
+    </div>
+</div>

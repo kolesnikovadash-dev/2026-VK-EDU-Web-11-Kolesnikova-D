@@ -1,0 +1,14 @@
+{% load static %}
+{% if user_obj.profile.avatar %}
+    <img src="{{ user_obj.profile.avatar.url }}"
+         alt="{{ user_obj.username }}"
+         width="60"
+         height="60"
+         class="rounded-circle">
+{% else %}
+    <img src="{% static 'img/avatar.png' %}"
+         alt="avatar"
+         width="60"
+         height="60"
+         class="rounded-circle">
+{% endif %}

@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Редактирование профиля</h1>
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+            {{ form.non_field_errors }}
+        </div>
+    {% endif %}
+
+    {% include 'includes/form_field.html' with field=form.avatar %}
+    {% include 'includes/form_field.html' with field=form.username %}
+    {% include 'includes/form_field.html' with field=form.email %}
+
+    <button type="submit" class="btn btn-primary">Сохранить</button>
+</form>
+{% endblock %}

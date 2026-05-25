@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Questions{% endblock %}
+
+{% block content %}
+    {% include 'includes/question_card.html' %}
+
+    <h2>Ответы:</h2>
+
+    {% if answers|length == 0 %}
+        <p class="text-muted">Пока нет ответов. Будьте первым, кто ответит на вопрос.</p>
+    {% else %}
+        <p>Страница {{ page.number }} из {{ page.paginator.num_pages }}</p>
+
+        {% for answer in answers %}
+            <div class="row border p-3 mb-3" id="answer-{{ answer.id }}">
+                <div class="col-3 text-center">
+                    {% include 'includes/avatar.html' with user_obj=answer.author %}
+                    {% include 'includes/vote_buttons.html' with obj=answer obj_type="answer" %}
+                </div>
+
+                <div class="col-9">
+                    <p>{{ answer.text }}</p>
+                    {% if answer.is_correct %}
+                        <div class="text-success fw-bold mb-2">Correct answer</div>
+                    {% endif %}
+                    {% if request.user == question.author %}
+                        <button class="btn btn-sm btn-outline-success mark-correct-btn"
+                                data-question-id="{{ question.id }}"
+                                data-answer-id="{{ answer.id }}"
+                                {% if answer.is_correct %}disabled{% endif %}>
+                            {% if answer.is_correct %}
+                                Correct answer
+                            {% else %}
+                                Correct
+                            {% endif %}
+                        </button>
+                    {% endif %}
+                    <p class="text-muted small">
+                        replied {{ answer.created_at|timesince }} ago by {{ answer.author.username }}
+                    </p>
+                </div>
+            </div>
+        {% endfor %}
+
+        {% include 'includes/paginator.html' %}
+    {% endif %}
+
+    <hr class="my-4">
+
+    {% if request.user.is_authenticated %}
+        <h3>Ваш ответ</h3>
+
+        <form method="post">
+            {% csrf_token %}
+
+            {% include 'includes/form_field.html' with field=form.text %}
+
+            <button type="submit" class="btn btn-primary">Ответить</button>
+        </form>
+    {% else %}
+        <p>
+            Чтобы ответить, нужно
+            <a href="{% url 'login' %}?continue={{ request.path }}">войти</a>.
+        </p>
+    {% endif %}
+{% endblock %}
+{% block scripts %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('.mark-correct-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const answerId = this.dataset.answerId;
+                    const questionId = this.dataset.questionId;
+
+                    fetch('/mark-correct/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'X-CSRFToken': getCookie('csrftoken'),
+                        },
+                        body: `question_id=${questionId}&answer_id=${answerId}`
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.answer_id !== undefined) {
+                            location.reload();
+                        }
+                    });
+                });
+            });
+        });
+    </script>
+{% endblock %}

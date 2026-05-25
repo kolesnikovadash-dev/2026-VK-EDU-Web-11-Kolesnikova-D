@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block title %}Логин{% endblock %}
+
+{% block content %}
+    <h1>Вход</h1>
+
+    <form method="post" action="{% url 'login' %}?continue={{ continue_url }}">
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
+
+        {% include 'includes/form_field.html' with field=form.username %}
+        {% include 'includes/form_field.html' with field=form.password %}
+
+        <button type="submit" class="btn btn-primary">Войти</button>
+        <a href="{% url 'signup' %}" class="ms-3">Регистрация</a>
+    </form>
+{% endblock %}
