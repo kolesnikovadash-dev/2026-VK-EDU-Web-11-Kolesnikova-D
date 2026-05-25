@@ -203,7 +203,7 @@ ab -l -n 1000 -c 10 URL
 | № | Тест | Размер документа | Failed requests | Requests/sec | Time/request |
 |---:|---|---:|---:|---:|---:|
 | 1 | Static напрямую через nginx | 29000 bytes | 0 | 18600.50 | 0.538 ms |
-| 2 | Static напрямую через Gunicorn | 22000 bytes | 0 | 5739.41 | 1.742 ms |
+| 2 | Static напрямую через Gunicorn | 29000 bytes | 0 | 5600.70 | 1.785 ms |
 | 3 | Dynamic напрямую через Gunicorn | 58 bytes | 0 | 5485.37 | 1.823 ms |
 | 4 | Dynamic через nginx proxy без cache | Variable | 0 | 4.16 | 2405.999 ms |
 | 5 | Dynamic через nginx proxy_cache | Variable | 0 | 10049.14 | 0.995 ms |
@@ -216,14 +216,14 @@ ab -l -n 1000 -c 10 URL
 
 ```text
 nginx static:      18600.50 requests/sec
-gunicorn static:    5739.41 requests/sec
+gunicorn static:    5600.70 requests/sec
 ```
 
 ```text
-18600.50 / 5739.41 ≈ 3.24
+18600.50 / 5600.70 ≈ 3.32
 ```
 
-**Статический документ через nginx отдаётся примерно в 3.2 раза быстрее**, чем через Gunicorn.
+**Статический документ через nginx отдаётся примерно в 3.3 раза быстрее**, чем через Gunicorn.
 
 ### Во сколько раз ускоряет работу proxy_cache?
 
