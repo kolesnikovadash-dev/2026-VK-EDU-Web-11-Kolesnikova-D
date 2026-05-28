@@ -92,13 +92,14 @@
                 });
             });
         });
-        <script>
-            window.CENTRIFUGO_WS_URL = "{{ centrifugo_ws_url }}";
-            window.CENTRIFUGO_CHANNEL = "{{ centrifugo_channel }}";
-            window.CURRENT_ANSWERS_PAGE = "{{ page.number }}";
-        </script>
-
-        <script src="https://unpkg.com/centrifuge@^5/dist/centrifuge.js"></script>
-        <script src="{% static 'js/question_realtime.js' %}"></script>
     </script>
+
+    <script>
+        window.CENTRIFUGO_WS_URL = "{{ centrifugo_ws_url }}";
+        window.CENTRIFUGO_CHANNEL = "{{ centrifugo_channel }}";
+        window.CURRENT_ANSWERS_PAGE = "{{ page.number }}";
+    </script>
+
+    <script src="https://unpkg.com/centrifuge@^5/dist/centrifuge.js"></script>
+    <script src="{% static 'js/question_realtime.js' %}"></script>
 {% endblock %}
