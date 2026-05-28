@@ -1,31 +1,320 @@
-# Домашнее задание 6 — Настройка веб-серверов
+# Домашнее задание 7 — Дополнительные функции
 
-Проект: **Вопросы и Ответы**  
-Стек: **Django + Gunicorn + nginx + PostgreSQL**
+Проект: **AskKolesnikova**  
+Стек: **Django + PostgreSQL + Redis + Celery + Celery Beat + Centrifugo + Maildev + Bootstrap + JavaScript**
 
-## Что было сделано
+## Что реализовано
 
-### 1. Настройка Gunicorn для Django
+### 1. Redis + Celery + Celery Beat
 
-Создан конфигурационный файл `gunicorn.conf.py`.
+В проект добавлены зависимости:
 
-Основные параметры:
-
-```python
-workers = 2
-bind = "127.0.0.1:8000"
-
-accesslog = "logs/gunicorn-access.log"
-errorlog = "logs/gunicorn-error.log"
+```text
+celery
+redis
+django-redis
+celery-redbeat
 ```
 
-Запуск Django-приложения через Gunicorn:
+Redis используется:
+
+- как брокер сообщений для Celery;
+- как backend для результатов Celery;
+- как backend кэша Django;
+- как хранилище расписания Celery Beat через RedBeat.
+
+В `settings.py` используются разные Redis DB:
+
+```text
+REDIS_CACHE_DB=0
+REDIS_BROKER_DB=1
+REDIS_BEAT_DB=2
+```
+
+Celery-приложение подключено через:
+
+```text
+application/celery.py
+application/__init__.py
+```
+
+Проверка worker:
 
 ```bash
-python -m gunicorn application.wsgi:application -c gunicorn.conf.py
+celery -A application inspect registered
 ```
 
-Приложение доступно на:
+Ожидаемые задачи:
+
+```text
+questions.tasks.update_popular_tags_cache
+questions.tasks.update_best_users_cache
+questions.tasks.send_new_answer_email_task
+questions.tasks.publish_new_answer_task
+```
+
+---
+
+### 2. Кэширование правой колонки
+
+Реализовано кэширование блоков правой колонки:
+
+- **Popular Tags** — 10 тегов с самым большим количеством вопросов за последние 3 месяца;
+- **Best Members** — 10 пользователей по суммарному рейтингу вопросов и ответов за последнюю неделю.
+
+Расчёт вынесен в:
+
+```text
+questions/services.py
+```
+
+Celery-задачи находятся в:
+
+```text
+questions/tasks.py
+```
+
+Задачи:
+
+```text
+update_popular_tags_cache
+update_best_users_cache
+```
+
+Они пересчитывают данные и кладут их в Redis cache под ключами:
+
+```text
+popular_tags
+best_users
+```
+
+В `questions/context_processors.py` данные берутся из кэша. Если кэша нет, выполняется fallback: данные считаются из БД и сразу сохраняются в Redis.
+
+Периодический запуск настроен через `CELERY_BEAT_SCHEDULE` в `settings.py`.
+
+---
+
+### 3. Email-уведомления о новых ответах
+
+При добавлении нового ответа автор вопроса получает email-уведомление.
+
+Отправка письма выполняется не во view, а в отдельной Celery-задаче:
+
+```text
+send_new_answer_email_task
+```
+
+Для локальной разработки используется Maildev.
+
+Maildev доступен по адресу:
+
+```text
+http://127.0.0.1:1080/
+```
+
+SMTP-порт:
+
+```text
+1025
+```
+
+---
+
+### 4. Real-time сообщения через Centrifugo
+
+Реализована отправка события о новом ответе в Centrifugo.
+
+После добавления ответа запускается Celery-задача:
+
+```text
+publish_new_answer_task
+```
+
+Она публикует сообщение в канал:
+
+```text
+question:<question_id>
+```
+
+На странице вопроса подключён JavaScript-клиент Centrifugo:
+
+```text
+static/js/question_realtime.js
+```
+
+Поведение:
+
+- если пользователь находится на первой странице ответов, новый ответ добавляется на страницу без перезагрузки;
+- если пользователь находится не на первой странице, показывается alert о новом ответе.
+
+Centrifugo admin доступен по адресу:
+
+```text
+http://127.0.0.1:8001/
+```
+
+Данные для локальной проверки:
+
+```text
+login: admin
+password: admin
+```
+
+---
+
+### 5. Полнотекстовый поиск
+
+Реализован поиск по заголовку и тексту вопроса через PostgreSQL full-text search.
+
+Backend endpoint:
+
+```text
+/search/suggest/?q=<query>
+```
+
+View:
+
+```text
+questions.views.search_suggest
+```
+
+Используются:
+
+```python
+SearchVector
+SearchQuery
+SearchRank
+```
+
+Frontend-подсказки реализованы в:
+
+```text
+static/js/search.js
+```
+
+Поведение:
+
+- запрос отправляется автоматически при вводе текста;
+- используется debounce 300 ms;
+- подсказки отображаются выпадающим списком под поисковой строкой.
+
+---
+
+## Docker Compose
+
+В `docker-compose.yml` добавлены сервисы:
+
+```text
+db
+redis
+web
+celery
+celerybeat
+maildev
+centrifugo
+```
+
+### Запуск через Docker Compose
+
+Если Docker доступен без `sudo`:
+
+```bash
+docker compose up --build
+```
+
+Если Docker требует права:
+
+```bash
+sudo docker compose up --build
+```
+
+Основные адреса:
+
+```text
+Django:      http://127.0.0.1:8000/
+Maildev:     http://127.0.0.1:1080/
+Centrifugo:  http://127.0.0.1:8001/
+PostgreSQL:  localhost:5432
+Redis:       localhost:6379
+```
+
+---
+
+## Локальный запуск без Docker
+
+### 1. Активировать окружение
+
+```bash
+cd ~/projects/2026-VK-EDU-Web-11-Kolesnikova-D-hw-3
+source .venv-linux/bin/activate
+```
+
+### 2. Запустить Redis
+
+```bash
+sudo service redis-server start
+redis-cli ping
+```
+
+Ожидаемый ответ:
+
+```text
+PONG
+```
+
+### 3. Запустить Maildev
+
+Можно запустить только Maildev через Docker:
+
+```bash
+sudo docker compose up maildev
+```
+
+Maildev будет доступен:
+
+```text
+http://127.0.0.1:1080/
+```
+
+### 4. Запустить Centrifugo
+
+```bash
+sudo docker compose up centrifugo
+```
+
+Админка:
+
+```text
+http://127.0.0.1:8001/
+```
+
+### 5. Запустить Celery worker
+
+В отдельном терминале:
+
+```bash
+cd ~/projects/2026-VK-EDU-Web-11-Kolesnikova-D-hw-3
+source .venv-linux/bin/activate
+celery -A application worker -l info
+```
+
+### 6. Запустить Celery Beat
+
+В отдельном терминале:
+
+```bash
+cd ~/projects/2026-VK-EDU-Web-11-Kolesnikova-D-hw-3
+source .venv-linux/bin/activate
+celery -A application beat -l info
+```
+
+### 7. Запустить Django
+
+```bash
+python manage.py runserver 0.0.0.0:8000
+```
+
+Открыть:
 
 ```text
 http://127.0.0.1:8000/
@@ -33,265 +322,101 @@ http://127.0.0.1:8000/
 
 ---
 
-### 2. Создание простого WSGI-скрипта
+## Проверка функциональности
 
-Создан отдельный WSGI-скрипт `simple_wsgi.py`, который работает без Django.
-
-Скрипт:
-
-- запускается через Gunicorn;
-- принимает GET-параметры;
-- принимает POST-параметры;
-- выводит их в ответе;
-- работает на `localhost:8081`.
-
-Запуск:
+### Проверка Django
 
 ```bash
-python -m gunicorn simple_wsgi:application --bind 127.0.0.1:8081
+python manage.py check
 ```
 
-Проверка GET:
-
-```bash
-curl "http://127.0.0.1:8081/?a=10&b=hello"
-```
-
-Проверка GET + POST:
-
-```bash
-curl -X POST "http://127.0.0.1:8081/?a=10&b=hello" -d "x=123&y=test"
-```
-
-Пример ответа:
+Ожидаемый результат:
 
 ```text
-GET params:
-{'a': ['10'], 'b': ['hello']}
-
-POST params:
-{'x': ['123'], 'y': ['test']}
+System check identified no issues
 ```
 
----
+### Проверка Celery
 
-### 3. Настройка nginx для отдачи статического контента
+```bash
+celery -A application inspect registered
+```
 
-nginx настроен для отдачи:
+В списке должны быть задачи:
 
-- `/uploads/` из директории `uploads`;
-- `/media/` из директории `media`;
-- `/static/` из директории `staticfiles`;
-- файлов с расширениями `.css`, `.js`, `.jpg`, `.jpeg`, `.png`, `.gif`, `.ico`, `.svg`, `.html`.
+```text
+questions.tasks.update_popular_tags_cache
+questions.tasks.update_best_users_cache
+questions.tasks.send_new_answer_email_task
+questions.tasks.publish_new_answer_task
+```
 
-Для Django была добавлена настройка:
+### Проверка кэша
+
+```bash
+python manage.py shell
+```
 
 ```python
-STATIC_ROOT = BASE_DIR / 'staticfiles'
+from django.core.cache import cache
+cache.get("popular_tags")
+cache.get("best_users")
 ```
 
-После этого выполнена команда:
+### Проверка email
 
-```bash
-python manage.py collectstatic
-```
-
-Результат:
+1. Открыть вопрос.
+2. Добавить новый ответ.
+3. Проверить логи Celery worker.
+4. Открыть Maildev:
 
 ```text
-142 static files copied to staticfiles
+http://127.0.0.1:1080/
 ```
 
-Проверка отдачи static:
+### Проверка real-time
 
-```bash
-curl http://127.0.0.1/sample.html
-```
+1. Открыть один и тот же вопрос в двух вкладках.
+2. В первой вкладке добавить ответ.
+3. Во второй вкладке новый ответ должен появиться без перезагрузки или должен появиться alert.
 
-Результат:
+### Проверка поиска
+
+Открыть endpoint напрямую:
 
 ```text
-hello static
+http://127.0.0.1:8000/search/suggest/?q=test
 ```
 
-Проверка отдачи uploads:
-
-```bash
-curl http://127.0.0.1/uploads/upload-test.txt
-```
-
-Результат:
-
-```text
-hello uploads
-```
-
-Также была настроена отдача файлов debug toolbar через `collectstatic`.
+Или начать вводить текст в поисковую строку в шапке сайта.
 
 ---
 
-### 4. Настройка проксирования nginx → Gunicorn
-
-В nginx настроен `upstream`:
-
-```nginx
-upstream django {
-    server 127.0.0.1:8000;
-}
-```
-
-Нестатические запросы проксируются на Gunicorn:
-
-```nginx
-location / {
-    proxy_pass http://django;
-    proxy_cache ask_cache;
-    proxy_cache_valid 200 1m;
-    add_header X-Proxy-Cache $upstream_cache_status;
-    proxy_set_header Host $host;
-    proxy_set_header X-Real-IP $remote_addr;
-}
-```
-
-Приложение доступно через nginx:
+## Основные изменённые файлы
 
 ```text
-http://127.0.0.1/
+application/celery.py
+application/settings.py
+application/__init__.py
+docker-compose.yml
+centrifugo/config.json
+questions/services.py
+questions/tasks.py
+questions/context_processors.py
+questions/views.py
+questions/urls.py
+questions/templates/core/question.html
+templates/base.html
+static/js/search.js
+static/js/question_realtime.js
+requirements.txt
+.env.example
 ```
 
 ---
 
-### 5. Настройка proxy_cache
+## Примечания
 
-В nginx добавлена зона кэширования:
+Секретные значения в учебном проекте вынесены в переменные окружения и отражены в `.env.example`.
 
-```nginx
-proxy_cache_path /tmp/nginx_cache levels=1:2 keys_zone=ask_cache:10m max_size=100m inactive=10m use_temp_path=off;
-```
-
-Проверка кэша:
-
-```bash
-curl -I http://127.0.0.1/
-curl -I http://127.0.0.1/
-```
-
-При повторном запросе nginx возвращает:
-
-```text
-X-Proxy-Cache: HIT
-```
-
----
-
-## Нагрузочное тестирование
-
-Тестирование выполнялось с помощью ApacheBench:
-
-```bash
-ab -n 1000 -c 10 URL
-```
-
-Для динамических страниц использовался флаг `-l`, чтобы ApacheBench не считал ошибкой переменную длину ответа:
-
-```bash
-ab -l -n 1000 -c 10 URL
-```
-
-### Результаты
-
-| № | Тест | Размер документа | Failed requests | Requests/sec | Time/request |
-|---:|---|---:|---:|---:|---:|
-| 1 | Static напрямую через nginx | 29000 bytes | 0 | 18600.50 | 0.538 ms |
-| 2 | Static напрямую через Gunicorn | 22000 bytes | 0 | 5739.41 | 1.742 ms |
-| 3 | Dynamic напрямую через Gunicorn | 58 bytes | 0 | 5485.37 | 1.823 ms |
-| 4 | Dynamic через nginx proxy без cache | Variable | 0 | 4.16 | 2405.999 ms |
-| 5 | Dynamic через nginx proxy_cache | Variable | 0 | 10049.14 | 0.995 ms |
-
----
-
-## Выводы
-
-### Насколько быстрее отдаётся статика через nginx по сравнению с WSGI/Gunicorn?
-
-```text
-nginx static:      18600.50 requests/sec
-gunicorn static:    5739.41 requests/sec
-```
-
-```text
-18600.50 / 5739.41 ≈ 3.24
-```
-
-**Статический документ через nginx отдаётся примерно в 3.2 раза быстрее**, чем через Gunicorn.
-
-### Во сколько раз ускоряет работу proxy_cache?
-
-```text
-nginx proxy без cache:      4.16 requests/sec
-nginx proxy_cache:      10049.14 requests/sec
-```
-
-```text
-10049.14 / 4.16 ≈ 2415.66
-```
-
-**proxy_cache ускорил отдачу динамической страницы примерно в 2416 раз.**
-
-Такой большой прирост связан с тем, что без кэша Django заново обрабатывает запрос, обращается к базе данных и рендерит страницу, а с кэшем nginx отдаёт уже готовый сохранённый ответ.
-
----
-
-## Файлы результата
-
-В проекте должны быть сохранены:
-
-```text
-gunicorn.conf.py
-nginx.conf
-simple_wsgi.py
-static_wsgi.py
-results_nginx_static.txt
-results_gunicorn_static.txt
-results_gunicorn_dynamic.txt
-results_nginx_proxy.txt
-results_nginx_proxy_cache.txt
-```
-
----
-
-## Использованные команды
-
-### Gunicorn для Django
-
-```bash
-python -m gunicorn application.wsgi:application -c gunicorn.conf.py
-```
-
-### WSGI-скрипт без Django
-
-```bash
-python -m gunicorn simple_wsgi:application --bind 127.0.0.1:8081
-```
-
-### nginx
-
-```bash
-sudo nginx -t
-sudo service nginx restart
-```
-
-### collectstatic
-
-```bash
-python manage.py collectstatic --noinput
-```
-
-### ApacheBench
-
-```bash
-ab -n 1000 -c 10 http://127.0.0.1/sample.html
-ab -n 1000 -c 10 http://127.0.0.1:8082/
-ab -n 1000 -c 10 "http://127.0.0.1:8081/?a=10&b=hello"
-ab -l -n 1000 -c 10 http://127.0.0.1/
-```
+Файл `.env` не должен попадать в Git.
