@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 from pathlib import Path
 import os
 from dotenv import load_dotenv
+from celery.schedules import crontab
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -142,6 +143,51 @@ INTERNAL_IPS = [
     '127.0.0.1',
     'localhost',
 ]
+
+REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
+REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
+REDIS_CACHE_DB = int(os.getenv("REDIS_CACHE_DB", 0))
+REDIS_BROKER_DB = int(os.getenv("REDIS_BROKER_DB", 1))
+REDIS_BEAT_DB = int(os.getenv("REDIS_BEAT_DB", 2))
+
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_CACHE_DB}",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        },
+        "TIMEOUT": 60 * 10,
+    }
+}
+
+CELERY_BROKER_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_BROKER_DB}"
+CELERY_RESULT_BACKEND = f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_BEAT_DB}"
+
+CELERY_BEAT_SCHEDULER = "redbeat.RedBeatScheduler"
+CELERY_REDBEAT_REDIS_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_BEAT_DB}"
+
+CELERY_BEAT_SCHEDULE = {
+    "update-popular-tags-cache": {
+        "task": "questions.tasks.update_popular_tags_cache",
+        "schedule": crontab(minute="*/10"),
+    },
+    "update-best-users-cache": {
+        "task": "questions.tasks.update_best_users_cache",
+        "schedule": crontab(minute="*/10"),
+    },
+}
+
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = os.getenv("EMAIL_HOST", "localhost")
+EMAIL_PORT = int(os.getenv("EMAIL_PORT", 1025))
+EMAIL_USE_TLS = False
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "noreply@ask.local")
+
+CENTRIFUGO_API_URL = os.getenv("CENTRIFUGO_API_URL", "http://127.0.0.1:8001/api")
+CENTRIFUGO_API_KEY = os.getenv("CENTRIFUGO_API_KEY", "centrifugo-api-key")
+CENTRIFUGO_TOKEN_HMAC_SECRET = os.getenv("CENTRIFUGO_TOKEN_HMAC_SECRET", "centrifugo-secret")
+CENTRIFUGO_WS_URL = os.getenv("CENTRIFUGO_WS_URL", "ws://127.0.0.1:8001/connection/websocket")
 
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/'

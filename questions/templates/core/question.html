@@ -12,37 +12,38 @@
         <p class="text-muted">Пока нет ответов. Будьте первым, кто ответит на вопрос.</p>
     {% else %}
         <p>Страница {{ page.number }} из {{ page.paginator.num_pages }}</p>
+        <div id="answers-list">
+            {% for answer in answers %}
+                <div class="row border p-3 mb-3" id="answer-{{ answer.id }}">
+                    <div class="col-3 text-center">
+                        {% include 'includes/avatar.html' with user_obj=answer.author %}
+                        {% include 'includes/vote_buttons.html' with obj=answer obj_type="answer" %}
+                    </div>
 
-        {% for answer in answers %}
-            <div class="row border p-3 mb-3" id="answer-{{ answer.id }}">
-                <div class="col-3 text-center">
-                    {% include 'includes/avatar.html' with user_obj=answer.author %}
-                    {% include 'includes/vote_buttons.html' with obj=answer obj_type="answer" %}
+                    <div class="col-9">
+                        <p>{{ answer.text }}</p>
+                        {% if answer.is_correct %}
+                            <div class="text-success fw-bold mb-2">Correct answer</div>
+                        {% endif %}
+                        {% if request.user == question.author %}
+                            <button class="btn btn-sm btn-outline-success mark-correct-btn"
+                                    data-question-id="{{ question.id }}"
+                                    data-answer-id="{{ answer.id }}"
+                                    {% if answer.is_correct %}disabled{% endif %}>
+                                {% if answer.is_correct %}
+                                    Correct answer
+                                {% else %}
+                                    Correct
+                                {% endif %}
+                            </button>
+                        {% endif %}
+                        <p class="text-muted small">
+                            replied {{ answer.created_at|timesince }} ago by {{ answer.author.username }}
+                        </p>
+                    </div>
                 </div>
-
-                <div class="col-9">
-                    <p>{{ answer.text }}</p>
-                    {% if answer.is_correct %}
-                        <div class="text-success fw-bold mb-2">Correct answer</div>
-                    {% endif %}
-                    {% if request.user == question.author %}
-                        <button class="btn btn-sm btn-outline-success mark-correct-btn"
-                                data-question-id="{{ question.id }}"
-                                data-answer-id="{{ answer.id }}"
-                                {% if answer.is_correct %}disabled{% endif %}>
-                            {% if answer.is_correct %}
-                                Correct answer
-                            {% else %}
-                                Correct
-                            {% endif %}
-                        </button>
-                    {% endif %}
-                    <p class="text-muted small">
-                        replied {{ answer.created_at|timesince }} ago by {{ answer.author.username }}
-                    </p>
-                </div>
-            </div>
-        {% endfor %}
+            {% endfor %}
+        </div>
 
         {% include 'includes/paginator.html' %}
     {% endif %}
@@ -91,5 +92,13 @@
                 });
             });
         });
+        <script>
+            window.CENTRIFUGO_WS_URL = "{{ centrifugo_ws_url }}";
+            window.CENTRIFUGO_CHANNEL = "{{ centrifugo_channel }}";
+            window.CURRENT_ANSWERS_PAGE = "{{ page.number }}";
+        </script>
+
+        <script src="https://unpkg.com/centrifuge@^5/dist/centrifuge.js"></script>
+        <script src="{% static 'js/question_realtime.js' %}"></script>
     </script>
 {% endblock %}

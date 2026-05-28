@@ -6,6 +6,9 @@ from .forms import AskForm, AnswerForm
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from .models import QuestionLike, AnswerLike
+from .tasks import send_new_answer_email_task, publish_new_answer_task
+from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank
+from django.conf import settings
 
 def index(request):
     questions = Question.objects.new()
@@ -35,6 +38,9 @@ def question(request, question_id):
                 author=request.user
             )
 
+            send_new_answer_email_task.delay(question.id, answer.id)
+            publish_new_answer_task.delay(question.id, answer.id)
+
             answers = Answer.objects.filter(
                 question=question
             ).select_related('author', 'author__profile').order_by('-rating', '-created_at')
@@ -60,6 +66,8 @@ def question(request, question_id):
         'answers': page.object_list,
         'page': page,
         'form': form,
+        'centrifugo_ws_url': settings.CENTRIFUGO_WS_URL,
+        'centrifugo_channel': f'question:{question.id}',
     })
 
 @login_required(login_url='/login/', redirect_field_name='continue')
@@ -177,4 +185,28 @@ def mark_correct(request):
     return JsonResponse({
         'answer_id': answer.id,
         'question_id': answer.question_id,
+    })
+
+def search_suggest(request):
+    query = request.GET.get("q", "").strip()
+    if len(query) < 2:
+        return JsonResponse({"results": []})
+    vector = SearchVector("title", weight="A") + SearchVector("text", weight="B")
+    search_query = SearchQuery(query)
+    questions = Question.objects.annotate(
+        search=vector,
+        rank=SearchRank(vector, search_query),
+    ).filter(
+        search=search_query,
+    ).order_by("-rank")[:10]
+    return JsonResponse({
+        "results": [
+            {
+                "id": question.id,
+                "title": question.title,
+                "url": f"/question/{question.id}",
+            }
+        for question in questions
+        ]
+
     })

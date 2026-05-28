@@ -1,17 +1,18 @@
-from django.contrib.auth.models import User
-from django.db.models import Count
-from .models import Tag
-
+from django.core.cache import cache
+from .services import get_popular_tags_data, get_best_users_data
 
 def sidebar(request):
-    popular_tags = Tag.objects.annotate(
-        questions_count=Count('questions')
-    ).order_by('-questions_count')[:20]
+    popular_tags = cache.get("popular_tags")
 
-    best_users = User.objects.annotate(
-        questions_count=Count('questions'),
-        answers_count=Count('answers'),
-    ).order_by('-questions_count', '-answers_count')[:10]
+    if popular_tags is None:
+        popular_tags = get_popular_tags_data()
+        cache.set("popular_tags", popular_tags, timeout=60*60)
+
+    best_users = cache.get("best_users")
+
+    if best_users is None:
+        best_users = get_best_users_data()
+        cache.set("best_users", best_users, timeout=60*60)
 
     return {
         'popular_tags': popular_tags,

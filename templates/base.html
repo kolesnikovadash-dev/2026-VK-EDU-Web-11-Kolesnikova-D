@@ -21,7 +21,21 @@
             <!-- search -->
             <div class="col-12 col-md-4 mb-2 mb-md-0">
                 <div class="d-flex">
-                    <input class="form-control" type="text" placeholder="Search">
+                    <div class="position-relative flex-grow-1">
+                        <input
+                            id="search-input"
+                            class="form-control"
+                            type="text"
+                            placeholder="Search"
+                            autocomplete="off"
+                        >
+                        <div
+                            id="search-suggestions"
+                            class="list-group position-absolute w-100"
+                            style="z-index: 1000;"
+                        ></div>
+                    </div>
+
                     {% if request.user.is_authenticated %}
                         <a href="{% url 'ask' %}" class="btn btn-success ms-2">Ask</a>
                     {% endif %}
@@ -124,5 +138,6 @@
         });
     </script>
     {% block scripts %} {% endblock %}
+    <script src="{% static 'js/search.js' %}"></script>
 </body>
 </html>

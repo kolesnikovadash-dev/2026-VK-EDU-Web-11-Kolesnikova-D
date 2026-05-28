@@ -11,6 +11,12 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  redis:
+    image: redis:7-alpine
+    container_name: ask_redis
+    ports:
+      - "6379:6379"
+
   web:
     build: .
     container_name: ask_web
@@ -25,8 +31,94 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_HOST: db
       POSTGRES_PORT: 5432
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_CACHE_DB: 0
+      REDIS_BROKER_DB: 1
+      REDIS_BEAT_DB: 2
+      EMAIL_HOST: maildev
+      EMAIL_PORT: 1025
+      DEFAULT_FROM_EMAIL: noreply@ask.local
+      CENTRIFUGO_API_URL: http://centrifugo:8000/api
+      CENTRIFUGO_API_KEY: centrifugo-api-key
+      CENTRIFUGO_TOKEN_HMAC_SECRET: centrifugo-secret
+      CENTRIFUGO_WS_URL: ws://127.0.0.1:8001/connection/websocket
     depends_on:
       - db
+      - redis
+      - maildev
+      - centrifugo
+
+  celery:
+    build: .
+    container_name: ask_celery
+    command: celery -A application worker -l info
+    volumes:
+      - .:/app
+    environment:
+      POSTGRES_DB: AskKolesnikova
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_CACHE_DB: 0
+      REDIS_BROKER_DB: 1
+      REDIS_BEAT_DB: 2
+      EMAIL_HOST: maildev
+      EMAIL_PORT: 1025
+      DEFAULT_FROM_EMAIL: noreply@ask.local
+      CENTRIFUGO_API_URL: http://centrifugo:8000/api
+      CENTRIFUGO_API_KEY: centrifugo-api-key
+      CENTRIFUGO_TOKEN_HMAC_SECRET: centrifugo-secret
+      CENTRIFUGO_WS_URL: ws://127.0.0.1:8001/connection/websocket
+    depends_on:
+      - db
+      - redis
+      - maildev
+      - centrifugo
+
+  celerybeat:
+    build: .
+    container_name: ask_celerybeat
+    command: celery -A application beat -l info
+    volumes:
+      - .:/app
+    environment:
+      POSTGRES_DB: AskKolesnikova
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_CACHE_DB: 0
+      REDIS_BROKER_DB: 1
+      REDIS_BEAT_DB: 2
+      EMAIL_HOST: maildev
+      EMAIL_PORT: 1025
+      DEFAULT_FROM_EMAIL: noreply@ask.local
+    depends_on:
+      - db
+      - redis
+      - celery
+
+  maildev:
+    image: maildev/maildev
+    container_name: ask_maildev
+    ports:
+      - "1080:1080"
+      - "1025:1025"
+
+  centrifugo:
+    image: centrifugo/centrifugo:v5
+    container_name: ask_centrifugo
+    command: centrifugo --config=/centrifugo/config.json
+    volumes:
+      - ./centrifugo:/centrifugo
+    ports:
+      - "8001:8000"
 
 volumes:
   postgres_data:
